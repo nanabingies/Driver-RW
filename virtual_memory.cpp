@@ -57,12 +57,8 @@ namespace virtual_memory {
 		if (PDE == 0)
 			return NULL;
 
-		// Check for 2MB pages - LargePage(L) bit set in PDE
-		// Entry page size bit = 0x80
-		// Ref: https://www.cnblogs.com/bianchengnan/p/6231597.html
 		if ((PDE & 0x80) != 0) {
-			// Physical address mask for 2 MB pages = 0xFFFFFFFE00000
-			// Physical page offset for 2 MB pages = 0x1FFFFF
+			
 			physicalAddress = ((PDE & 0xFFFFFFFE00000) + (virtual_address & 0x1FFFFF));
 			std::cout << "[+] Physical Address: 0x " << std::hex << physicalAddress << std::endl;
 			return (uintptr_t)physicalAddress;
@@ -83,13 +79,9 @@ namespace virtual_memory {
 		if (PTE == 0)
 			return NULL;
 
-		// Get physical page offset from virtual address
-		// Physical page offset for 4 kB pages = 0xFFF
 		phyPageOffset = virtual_address & 0xFFF;
 		//std::cout << "[+] Physical page offset : " << std::hex << phyPageOffset << std::endl;
 
-		// Calculate physical address
-		// Physical address mask for 4 kB pages = 0xFFFFFFFFFF000
 		physicalAddress = (PTE & 0xFFFFFFFFFF000) + phyPageOffset;
 		//std::cout << "[+] Physical Address : 0x" << std::hex << physicalAddress << std::endl;
 
@@ -119,7 +111,7 @@ namespace virtual_memory {
 		return reinterpret_cast<uintptr_t>(drivers[0]);
 	}
 
-	// https://public.cnotools.studio/bring-your-own-vulnerable-kernel-driver-byovkd/utilities/leaking-kernel-dtb
+	
 	uintptr_t GetPml4Base(HANDLE driver) {
 		DWORD offset = 0x1000; 
 		DWORD limit = 0x100000; 
@@ -127,7 +119,7 @@ namespace virtual_memory {
 		WORD cr3Offset = 0xa0; 
 		uintptr_t pml4Base = NULL;
 
-		// Loop until we find _PROCESSOR_START_BLOCK PA by heuristic scanning and get CR3 value
+		
 		while (offset < limit) {
 			if (!memory::read_physical_memory(driver, offset, &buffer, sizeof(uintptr_t))) {
 				std::cout << "[-] Unable to read physical memory to get _PROCESSOR_START_BLOCK PA!\n";
